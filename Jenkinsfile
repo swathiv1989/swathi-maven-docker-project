@@ -1,31 +1,31 @@
+#!groovy
+
 pipeline {
-  agent any
-  options {
-    buildDiscarder(logRotator(numToKeepStr: '5'))
-  }
-  environment {
-    DOCKERHUB_CREDENTIALS = credentials('dockerhub')
-  }
-  stages {
-    stage('Build') {
+	agent none  stages {
+  	stage('Maven Install') {
+    	agent {
+      	docker {
+        	image 'maven:3.5.0'
+        }
+      }
+      steps {
+      	sh 'mvn clean install'
+      }
+    }
+    stage('Docker Build') {
+    	agent any
       steps {
         sh 'docker build -t swathi-maven-docker-project.jar:v2 .'
       }
     }
-    stage('Login') {
+    stage('Docker Push') {
+    	agent any
       steps {
-        sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
+      	withCredentials([usernamePassword(credentialsId: 'dockerHub', passwordVariable: 'dockerHubPassword', usernameVariable: 'dockerHubUser')]) {
+        	sh "docker login -u ${env.dockerHubUser} -p ${env.dockerHubPassword}"
+          sh 'docker push swathivullachi/swathi-maven-docker-project-images:v2'
+        }
       }
-    }
-    stage('Push') {
-      steps {
-        sh 'docker push swathivullachi/swathi-maven-docker-project-images:v2'
-      }
-    }
-  }
-  post {
-    always {
-      sh 'docker logout'
     }
   }
 }
