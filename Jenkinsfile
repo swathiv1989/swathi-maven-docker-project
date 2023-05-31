@@ -14,7 +14,7 @@ git 'https://github.com/swathiv1989/swathi-maven-docker-project.git'
 stage('Building our image') {
 steps{
 script {
-dockerImage = docker.build registry + ":$BUILD_NUMBER"
+dockerImage = docker.build("swathivullachi/swathi-maven-docker-project-images:latest") 
 }
 }
 }
